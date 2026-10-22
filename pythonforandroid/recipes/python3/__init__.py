@@ -54,7 +54,7 @@ class Python3Recipe(TargetPythonRecipe):
         :class:`~pythonforandroid.python.GuestPythonRecipe`
     '''
 
-    version = '3.14.2'
+    version = '3.15.0'
     url = 'https://github.com/python/cpython/archive/refs/tags/v{version}.tar.gz'
     name = 'python3'
 
@@ -163,8 +163,8 @@ class Python3Recipe(TargetPythonRecipe):
         longer used and has been removed in favour of extension .pyc
     '''
 
-    disable_gil = False
-    '''python3.13 experimental free-threading build'''
+    disable_gil = True
+    '''Enable CPython 3.15 free-threading (no GIL) on the Android target.'''
 
     built_libraries = {"libpythonbin.so": "./android-build/"}
 
@@ -186,6 +186,8 @@ class Python3Recipe(TargetPythonRecipe):
         flags = ''
         if major == '3' and int(minor) < 8:
             flags += 'm'
+        if major == '3' and int(minor) >= 13 and self.disable_gil:
+            flags += 't'
         return '{major}.{minor}{flags}'.format(
             major=major,
             minor=minor,
@@ -221,10 +223,9 @@ class Python3Recipe(TargetPythonRecipe):
         super().apply_patches(arch, build_dir)
 
     def include_root(self, arch_name):
-        _p_version = Version(self.version)
         return join(
             self.get_build_dir(arch_name), 'android-build', 'android-root',
-            'include', f'python{_p_version.major}.{_p_version.minor}'
+            'include', f'python{self.link_version}'
         )
 
     def link_root(self, arch_name):
